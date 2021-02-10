@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using System.Collections.Generic;
 using Microsoft.OpenApi.Models;
@@ -10,10 +9,7 @@ namespace Swashbuckle.AspNetCore.ApiTesting
     {
         private readonly IJsonValidator _jsonValidator;
 
-        public JsonObjectValidator(IJsonValidator jsonValidator)
-        {
-            _jsonValidator = jsonValidator;
-        }
+        public JsonObjectValidator(IJsonValidator jsonValidator) => _jsonValidator = jsonValidator;
 
         public bool CanValidate(OpenApiSchema schema) => schema.Type == "object";
 
@@ -42,18 +38,24 @@ namespace Swashbuckle.AspNetCore.ApiTesting
                 errorMessagesList.Add($"Path: {instance.Path}. Number of properties is less than minProperties");
 
             // required
-            if (schema.Required != null && schema.Required.Except(properties.Select(p => p.Name)).Any())
-                errorMessagesList.Add($"Path: {instance.Path}. Required property(s) not present");
+            var missingRequiredProperties = schema.Required.Where(x => !properties.Any(p => p.Name == x));
+            if (schema.Required != null && missingRequiredProperties.Any())
+                errorMessagesList.Add($"Path: {instance.Path}. Required property(s) not present: {string.Join(",", missingRequiredProperties)}");
 
             foreach (var property in properties)
             {
                 // properties
                 if (schema.Properties != null && schema.Properties.TryGetValue(property.Name, out OpenApiSchema propertySchema))
                 {
-                    if (!_jsonValidator.Validate(propertySchema, openApiDocument, property.Value, out IEnumerable<string> propertyErrorMessages))
-                        errorMessagesList.AddRange(propertyErrorMessages);
+                    if (property.HasValues && !string.IsNullOrEmpty(property.Value.ToString()))
+                        if (!_jsonValidator.Validate(propertySchema, openApiDocument, property.Value, out IEnumerable<string> propertyErrorMessages))
+                            errorMessagesList.AddRange(propertyErrorMessages);
 
                     continue;
+                }
+                else
+                {
+                    errorMessagesList.Add($"Property {property.Name} is not expected");
                 }
 
                 if (!schema.AdditionalPropertiesAllowed)

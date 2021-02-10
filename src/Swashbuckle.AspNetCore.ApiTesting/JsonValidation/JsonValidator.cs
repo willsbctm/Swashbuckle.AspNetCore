@@ -39,7 +39,11 @@ namespace Swashbuckle.AspNetCore.ApiTesting
 
             var errorMessagesList = new List<string>();
 
-            foreach (var subValidator in _subValidators)
+            var validators = _subValidators.Where(x => x.CanValidate(schema));
+            if (!validators.Any())
+                errorMessagesList.Add($"There is no validator for type {schema.Type}");
+
+            foreach (var subValidator in validators)
             {
                 if (!subValidator.CanValidate(schema)) continue;
 

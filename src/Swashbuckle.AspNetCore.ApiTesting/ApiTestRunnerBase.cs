@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.OpenApi.Models;
@@ -48,7 +49,7 @@ namespace Swashbuckle.AspNetCore.ApiTesting
         public async Task TestAsync(
             string documentName,
             string operationId,
-            string expectedStatusCode,
+            HttpStatusCode expectedStatusCode,
             HttpRequestMessage request,
             HttpClient httpClient)
         {
@@ -56,12 +57,12 @@ namespace Swashbuckle.AspNetCore.ApiTesting
             if (!openApiDocument.TryFindOperationById(operationId, out string pathTemplate, out OperationType operationType))
                 throw new InvalidOperationException($"Operation with id '{operationId}' not found in OpenAPI document '{documentName}'");
 
-            if (expectedStatusCode.StartsWith("2"))
-                _requestValidator.Validate(request, openApiDocument, pathTemplate, operationType);
+            if ((int)expectedStatusCode >= 200 && (int)expectedStatusCode < 300)
+                _requestValidator.Validate(request, openApiDocument, pathTemplate);
 
             var response = await httpClient.SendAsync(request);
 
-            _responseValidator.Validate(response, openApiDocument, pathTemplate, operationType, expectedStatusCode);
+            _responseValidator.Validate(response, request, openApiDocument, pathTemplate, expectedStatusCode);
         }
 
         public void Dispose()

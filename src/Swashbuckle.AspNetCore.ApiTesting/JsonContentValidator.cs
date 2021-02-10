@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using Microsoft.OpenApi.Models;
@@ -10,15 +10,9 @@ namespace Swashbuckle.AspNetCore.ApiTesting
     {
         private readonly JsonValidator _jsonValidator;
 
-        public JsonContentValidator()
-        {
-            _jsonValidator = new JsonValidator();
-        }
+        public JsonContentValidator() => _jsonValidator = new JsonValidator();
 
-        public bool CanValidate(string mediaType)
-        {
-            return mediaType.Contains("json");
-        }
+        public bool CanValidate(string mediaType) => mediaType.Contains("json");
 
         public void Validate(OpenApiMediaType mediaTypeSpec, OpenApiDocument openApiDocument, HttpContent content)
         {

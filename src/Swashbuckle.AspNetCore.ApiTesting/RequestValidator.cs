@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
@@ -23,16 +23,18 @@ namespace Swashbuckle.AspNetCore.ApiTesting
         public void Validate(
             HttpRequestMessage request,
             OpenApiDocument openApiDocument,
-            string pathTemplate,
-            OperationType operationType)
+            string pathTemplate)
         {
-            var operationSpec = openApiDocument.GetOperationByPathAndType(pathTemplate, operationType, out OpenApiPathItem pathSpec);
-            var parameterSpecs = ExpandParameterSpecs(pathSpec, operationSpec, openApiDocument);
-
             // Convert to absolute Uri as a workaround to limitation with Uri class - i.e. most of it's methods are not supported for relative Uri's.
             var requestUri = new Uri(new Uri("http://tempuri.org"), request.RequestUri);
 
-            if (!TryParsePathNameValues(pathTemplate, requestUri.AbsolutePath, out NameValueCollection pathNameValues))
+            if (!TryGetOperation(openApiDocument, pathTemplate, request, out var operationType))
+                throw new RequestDoesNotMatchSpecException($"Request URI '{requestUri.AbsolutePath}' does not allow '{operationType}' verb");
+
+            var operationSpec = openApiDocument.GetOperationByPathAndType(pathTemplate, operationType, out OpenApiPathItem pathSpec);
+            var parameterSpecs = ExpandParameterSpecs(pathSpec, operationSpec, openApiDocument);
+
+            if (!TryParsePathNameValues(pathTemplate, requestUri.AbsolutePath, openApiDocument, out NameValueCollection pathNameValues))
                 throw new RequestDoesNotMatchSpecException($"Request URI '{requestUri.AbsolutePath}' does not match specified template '{pathTemplate}'");
 
             if (request.Method != new HttpMethod(operationType.ToString()))
@@ -72,9 +74,14 @@ namespace Swashbuckle.AspNetCore.ApiTesting
             return new OpenApiParameter[] { };
         }
 
-        private bool TryParsePathNameValues(string pathTemplate, string requestUri, out NameValueCollection pathNameValues)
+        private bool TryParsePathNameValues(string pathTemplate, string requestUri, OpenApiDocument openApiDocument, out NameValueCollection pathNameValues)
         {
             pathNameValues = new NameValueCollection();
+
+            if (!openApiDocument.Paths.ContainsKey(pathTemplate))
+                return false;
+
+            requestUri = RemoveBasePath(requestUri, openApiDocument);
 
             var templateMatcher = new TemplateMatcher(TemplateParser.Parse(pathTemplate), null);
             var routeValues = new RouteValueDictionary();
@@ -85,9 +92,44 @@ namespace Swashbuckle.AspNetCore.ApiTesting
             {
                 pathNameValues.Add(entry.Key, entry.Value.ToString());
             }
+
             return true;
         }
 
+        private bool TryGetOperation(OpenApiDocument openApiDocument, string pathTemplate, HttpRequestMessage request, out OperationType operation)
+        {
+            operation = ObterVerboOpenApi(request);
+            return openApiDocument.Paths[pathTemplate].Operations.ContainsKey(operation);
+        }
+
+        public static OperationType ObterVerboOpenApi(HttpRequestMessage requisicao) => requisicao.Method.ToString() switch
+        {
+            "GET" => OperationType.Get,
+            "PUT" => OperationType.Put,
+            "POST" => OperationType.Post,
+            "DELETE" => OperationType.Delete,
+            "OPTIONS" => OperationType.Options,
+            "HEAD" => OperationType.Head,
+            "PATCH" => OperationType.Patch,
+            "TRACE" => OperationType.Trace,
+            _ => throw new NotImplementedException()
+        };
+
+        private string RemoveBasePath(string requestUri, OpenApiDocument openApiDocument)
+        {
+            var basesPath = openApiDocument.Servers.Select(s => new Uri(s.Url)).ToList();
+            basesPath.ForEach(uri =>
+            {
+                var indexBasePath = requestUri.IndexOf(uri.AbsolutePath);
+                if (indexBasePath > -1)
+                {
+                    requestUri = requestUri.Remove(indexBasePath, uri.AbsolutePath.Length);
+                    return;
+                }
+            });
+
+            return requestUri;
+        }
 
         private void ValidateParameters(
             IEnumerable<OpenApiParameter> parameterSpecs,
@@ -101,7 +143,8 @@ namespace Swashbuckle.AspNetCore.ApiTesting
                 if ((parameterSpec.In == ParameterLocation.Path || parameterSpec.Required) && value == null)
                     throw new RequestDoesNotMatchSpecException($"Required parameter '{parameterSpec.Name}' is not present");
 
-                if (value == null || parameterSpec.Schema == null) continue;
+                if (value == null || parameterSpec.Schema == null)
+                    continue;
 
                 var schema = (parameterSpec.Schema.Reference != null)
                     ? (OpenApiSchema)openApiDocument.ResolveReference(parameterSpec.Schema.Reference)
@@ -121,7 +164,8 @@ namespace Swashbuckle.AspNetCore.ApiTesting
             if (requestBodySpec.Required && content == null)
                 throw new RequestDoesNotMatchSpecException("Required content is not present");
 
-            if (content == null) return;
+            if (content == null)
+                return;
 
             if (!requestBodySpec.Content.TryGetValue(content.Headers.ContentType.MediaType, out OpenApiMediaType mediaTypeSpec))
                 throw new RequestDoesNotMatchSpecException($"Content media type '{content.Headers.ContentType.MediaType}' is not specified");

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,7 +17,6 @@ namespace Swashbuckle.AspNetCore.ApiTesting.Test
             var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => Subject().TestAsync(
                 "v1",
                 "GetProducts",
-                "200",
                 new HttpRequestMessage(),
                 CreateHttpClient()));
 
@@ -31,11 +31,10 @@ namespace Swashbuckle.AspNetCore.ApiTesting.Test
             {
                 c.OpenApiDocs.Add("v1", new OpenApiDocument());
             });
-                
+
             var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => subject.TestAsync(
                 "v1",
                 "GetProducts",
-                "200",
                 new HttpRequestMessage(),
                 CreateHttpClient()));
 
@@ -43,11 +42,11 @@ namespace Swashbuckle.AspNetCore.ApiTesting.Test
         }
 
         [Theory]
-        [InlineData("/api/products", "200", "Required parameter 'param' is not present")]
-        [InlineData("/api/products?param=foo", "200", null)]
+        [InlineData("/api/products", HttpStatusCode.OK, "Required parameter 'param' is not present")]
+        [InlineData("/api/products?param=foo", HttpStatusCode.OK, null)]
         public async Task TestAsync_ThrowsException_IfExpectedStatusCodeIs2xxAndRequestDoesNotMatchSpec(
             string requestUri,
-            string statusCode,
+            HttpStatusCode statusCode,
             string expectedExceptionMessage)
         {
             var subject = new FakeApiTestRunner();
@@ -75,7 +74,7 @@ namespace Swashbuckle.AspNetCore.ApiTesting.Test
                                     },
                                     Responses = new OpenApiResponses
                                     {
-                                        [ "200" ] = new OpenApiResponse() 
+                                        ["200"] = new OpenApiResponse()
                                     }
                                 }
                             }
@@ -94,7 +93,7 @@ namespace Swashbuckle.AspNetCore.ApiTesting.Test
                     Method = HttpMethod.Get
                 },
                 CreateHttpClient()));
- 
+
             Assert.Equal(expectedExceptionMessage, exception?.Message);
         }
 
@@ -122,8 +121,8 @@ namespace Swashbuckle.AspNetCore.ApiTesting.Test
                                     OperationId = "GetProducts",
                                     Responses = new OpenApiResponses
                                     {
-                                        [ "400" ] = new OpenApiResponse(),
-                                        [ "200" ] = new OpenApiResponse() 
+                                        ["400"] = new OpenApiResponse(),
+                                        ["200"] = new OpenApiResponse()
                                     }
                                 }
                             }
@@ -142,7 +141,7 @@ namespace Swashbuckle.AspNetCore.ApiTesting.Test
                     Method = HttpMethod.Get
                 },
                 CreateHttpClient()));
- 
+
             Assert.Equal(expectedExceptionMessage, exception?.Message);
         }
 

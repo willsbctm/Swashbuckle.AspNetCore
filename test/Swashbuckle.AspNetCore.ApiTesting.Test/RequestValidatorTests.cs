@@ -25,7 +25,7 @@ namespace Swashbuckle.AspNetCore.ApiTesting.Test
 
             var exception = Record.Exception(() =>
             {
-                Subject().Validate(request, openApiDocument, pathTemplate, OperationType.Get);
+                Subject().Validate(request, openApiDocument, pathTemplate);
             });
 
             Assert.Equal(expectedErrorMessage, exception?.Message);
@@ -48,7 +48,7 @@ namespace Swashbuckle.AspNetCore.ApiTesting.Test
 
             var exception = Record.Exception(() =>
             {
-                Subject().Validate(request, openApiDocument, "/api/products", operationType);
+                Subject().Validate(request, openApiDocument, "/api/products");
             });
 
             Assert.Equal(expectedErrorMessage, exception?.Message);
@@ -82,7 +82,7 @@ namespace Swashbuckle.AspNetCore.ApiTesting.Test
 
             var exception = Record.Exception(() =>
             {
-                Subject().Validate(request, openApiDocument, "/api/products", OperationType.Get);
+                Subject().Validate(request, openApiDocument, "/api/products");
             });
 
             Assert.Equal(expectedErrorMessage, exception?.Message);
@@ -117,7 +117,7 @@ namespace Swashbuckle.AspNetCore.ApiTesting.Test
 
             var exception = Record.Exception(() =>
             {
-                Subject().Validate(request, openApiDocument, "/api/products", OperationType.Get);
+                Subject().Validate(request, openApiDocument, "/api/products");
             });
 
             Assert.Equal(expectedErrorMessage, exception?.Message);
@@ -199,7 +199,7 @@ namespace Swashbuckle.AspNetCore.ApiTesting.Test
 
             var exception = Record.Exception(() =>
             {
-                Subject().Validate(request, openApiDocument, "/api/products", OperationType.Get);
+                Subject().Validate(request, openApiDocument, "/api/products");
             });
 
             Assert.Equal(expectedErrorMessage, exception?.Message);
@@ -244,7 +244,7 @@ namespace Swashbuckle.AspNetCore.ApiTesting.Test
 
             var exception = Record.Exception(() =>
             {
-                Subject().Validate(request, openApiDocument, "/api/products", OperationType.Get);
+                Subject().Validate(request, openApiDocument, "/api/products");
             });
 
             Assert.Equal(expectedErrorMessage, exception?.Message);
@@ -277,7 +277,7 @@ namespace Swashbuckle.AspNetCore.ApiTesting.Test
 
             var exception = Record.Exception(() =>
             {
-                Subject().Validate(request, openApiDocument, "/api/products", OperationType.Post);
+                Subject().Validate(request, openApiDocument, "/api/products");
             });
 
             Assert.Equal(expectedErrorMessage, exception?.Message);
@@ -309,7 +309,7 @@ namespace Swashbuckle.AspNetCore.ApiTesting.Test
 
             var exception = Record.Exception(() =>
             {
-                Subject().Validate(request, openApiDocument, "/api/products", OperationType.Post);
+                Subject().Validate(request, openApiDocument, "/api/products");
             });
 
             Assert.Equal(expectedErrorMessage, exception?.Message);
@@ -348,7 +348,7 @@ namespace Swashbuckle.AspNetCore.ApiTesting.Test
 
             var exception = Record.Exception(() =>
             {
-                Subject(new[] { new JsonContentValidator() }).Validate(request, openApiDocument, "/api/products", OperationType.Post);
+                Subject(new[] { new JsonContentValidator() }).Validate(request, openApiDocument, "/api/products");
             });
 
             Assert.Equal(expectedErrorMessage, exception?.Message);

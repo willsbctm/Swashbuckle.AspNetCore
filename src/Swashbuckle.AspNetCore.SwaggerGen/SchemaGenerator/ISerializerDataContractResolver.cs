@@ -168,7 +168,7 @@ namespace Swashbuckle.AspNetCore.SwaggerGen
             MemberInfo = memberInfo;
         }
 
-        public string Name { get; } 
+        public string Name { get; }
         public bool IsRequired { get; }
         public bool IsNullable { get; }
         public bool IsReadOnly { get; }

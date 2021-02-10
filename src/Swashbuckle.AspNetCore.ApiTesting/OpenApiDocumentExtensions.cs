@@ -27,7 +27,7 @@ namespace Swashbuckle.AspNetCore.ApiTesting
             }
 
             pathTemplate = null;
-            operationType = default(OperationType);
+            operationType = default;
             return false;
         }
 

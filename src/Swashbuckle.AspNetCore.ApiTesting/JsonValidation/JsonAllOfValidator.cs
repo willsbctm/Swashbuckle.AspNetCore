@@ -26,7 +26,7 @@ namespace Swashbuckle.AspNetCore.ApiTesting
 
             var allOfArray = schema.AllOf.ToArray();
 
-            for (int i=0;i<allOfArray.Length;i++)
+            for (int i = 0; i < allOfArray.Length; i++)
             {
                 if (!_jsonValidator.Validate(allOfArray[i], openApiDocument, instance, out IEnumerable<string> subErrorMessages))
                     errorMessagesList.AddRange(subErrorMessages.Select(msg => $"{msg} (allOf[{i}])"));
